@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S1 双色球预测系统 — 逐期对比</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: #0f1117; color: #e0e0e0; min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a1d2e 0%, #2d1f3d 50%, #1a1d2e 100%);
+  padding: 28px 0; text-align: center; border-bottom: 1px solid #333;
+}
+.header h1 { font-size: 26px; color: #fff; letter-spacing: 2px; }
+.header .disclaimer { color: #e6a23c; font-size: 12px; margin-top: 8px; background: rgba(230,162,60,0.1); display: inline-block; padding: 6px 16px; border-radius: 4px; border: 1px solid rgba(230,162,60,0.2); }
+
+/* Stats Bar */
+.stats-bar {
+  display: flex; justify-content: center; gap: 40px; padding: 18px 0;
+  background: #141720; border-bottom: 1px solid #2a2a3a;
+}
+.stat-item { text-align: center; }
+.stat-value { font-size: 22px; font-weight: 700; }
+.stat-value.red { color: #ff5e5e; }
+.stat-value.blue { color: #5e9eff; }
+.stat-value.gold { color: #ffc107; }
+.stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+
+/* Legend */
+.legend {
+  display: flex; justify-content: center; gap: 20px; padding: 12px 0;
+  background: #141720; font-size: 12px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-ball { width: 16px; height: 16px; border-radius: 50%; }
+.legend-ball.hit { background: #ff3b3b; box-shadow: 0 0 10px rgba(255,59,59,0.6); }
+.legend-ball.miss { background: #2a2a3a; border: 1px solid #444; }
+.legend-ball.actual { background: #1a1d2e; border: 2px solid #e0e0e0; }
+
+/* Table Container */
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 10px; }
+
+/* Period Header */
+.period-header {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  background: #1e2130; border-radius: 8px 8px 0 0; border: 1px solid #2a2a3a;
+  border-bottom: none; margin-top: 12px;
+}
+.period-num { font-weight: 700; color: #ffc107; font-size: 14px; min-width: 70px; }
+.period-stat { font-size: 11px; color: #666; }
+.period-stat.good { color: #4caf50; }
+.period-stat.ok { color: #ffc107; }
+.period-stat.bad { color: #ff5252; }
+.period-rank { margin-left: auto; font-size: 11px; color: #555; }
+
+/* Row */
+.row {
+  display: grid; grid-template-columns: 80px 1fr 1fr 1fr 100px 50px;
+  align-items: center; padding: 10px 12px; gap: 6px;
+  border-left: 1px solid #2a2a3a; border-right: 1px solid #2a2a3a;
+}
+.row.pred { background: #181a26; }
+.row.actual { background: #11131c; border-bottom: 1px solid #2a2a3a; border-radius: 0 0 8px 8px; }
+.row-label { font-size: 11px; color: #888; font-weight: 600; text-align: center; }
+
+/* Number Balls */
+.balls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.ball {
+  width: 34px; height: 34px; border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 14px;
+  font-weight: 700; color: #e0e0e0;
+  background: #2a2a3a; border: 1px solid #444;
+  transition: all 0.3s;
+}
+.ball.miss { background: #222639; border-color: #333; color: #666; font-weight: 400; }
+.ball.hit {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  border-color: #ff5252; color: #fff;
+  box-shadow: 0 0 14px rgba(229,57,53,0.7), 0 0 4px rgba(229,57,53,0.5);
+  animation: hitGlow 1.5s ease-in-out infinite alternate;
+  transform: scale(1.08); font-weight: 800;
+}
+.ball.actual-blue {
+  background: #0d47a1; border-color: #42a5f5; color: #fff;
+  box-shadow: 0 0 10px rgba(66,165,245,0.5);
+}
+.ball.blue-hit {
+  background: linear-gradient(135deg, #e53935 0%, #0d47a1 100%);
+  border-color: #ff5252; color: #fff;
+  box-shadow: 0 0 14px rgba(229,57,53,0.7), 0 0 4px rgba(66,165,245,0.5);
+  animation: hitGlow 1.5s ease-in-out infinite alternate;
+  transform: scale(1.08); font-weight: 800;
+}
+@keyframes hitGlow {
+  0% { box-shadow: 0 0 10px rgba(229,57,53,0.5); }
+  100% { box-shadow: 0 0 20px rgba(229,57,53,0.9), 0 0 6px rgba(229,57,53,0.6); }
+}
+
+/* Hit Count */
+.hit-count { font-size: 16px; font-weight: 700; text-align: center; }
+.hit-count.high { color: #4caf50; }
+.hit-count.mid { color: #ffc107; }
+.hit-count.low { color: #ff5252; }
+
+.period-divider {
+  height: 3px; background: linear-gradient(90deg, transparent 0%, #2a2a3a 50%, transparent 100%);
+  margin: 4px 0;
+}
+
+/* Scroll-to-top */
+.scroll-top {
+  position: fixed; bottom: 24px; right: 24px; width: 44px; height: 44px;
+  border-radius: 50%; background: #2d1f3d; border: 1px solid #555; color: #fff;
+  font-size: 20px; cursor: pointer; display: none; align-items: center;
+  justify-content: center; z-index: 100; transition: all 0.3s;
+}
+.scroll-top:hover { background: #3d2f5d; }
+.scroll-top.show { display: flex; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .row { grid-template-columns: 50px 1fr 1fr 1fr 60px 40px; padding: 8px 4px; gap: 3px; }
+  .ball { width: 28px; height: 28px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>S1 双色球预测系统 · 逐期对比</h1>
+  <div class="disclaimer">声明：双色球摇奖是随机事件，本系统仅作为娱乐使用，不作为投注依据，涉及法律责任请自负</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-value red" id="stat-rate">--</div><div class="stat-label">红球命中率</div></div>
+  <div class="stat-item"><div class="stat-value gold" id="stat-total">--</div><div class="stat-label">总命中红球</div></div>
+  <div class="stat-item"><div class="stat-value blue" id="stat-blue">--</div><div class="stat-label">蓝球命中期数</div></div>
+  <div class="stat-item"><div class="stat-value" id="stat-best">--</div><div class="stat-label">单期最高命中</div></div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-ball hit"></div> 命中</div>
+  <div class="legend-item"><div class="legend-ball miss"></div> 未命中</div>
+  <div class="legend-item"><div class="legend-ball actual"></div> 实际开奖</div>
+  <div class="legend-item"><div class="legend-ball actual-blue"></div> 蓝球实际</div>
+</div>
+
+<div class="container" id="container"></div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ==================== DATA ====================
+const DATA = {"stats": {"tests": 42, "red_hits": 110, "blue_hits": 7, "rate": 43.7, "first": "2026027", "last": "2026068", "updated": "2026-06-18 10:05"}, "rows": [{"period": "2026068", "z1p": [1, 10, 5, 4], "z2p": [22, 21, 16, 15], "z3p": [28, 30, 24, 29], "bp": [2, 13, 15, 7], "z1a": [3, 5], "z2a": [16, 18], "z3a": [29, 32], "ba": 4, "h1": 1, "h2": 1, "h3": 1, "bh": 0, "total_h": 3}, {"period": "2026067", "z1p": [7, 4, 2, 10], "z2p": [22, 21, 14, 19], "z3p": [28, 29, 30, 31], "bp": [2, 15, 7, 16], "z1a": [4], "z2a": [19], "z3a": [27, 29, 30, 32], "ba": 13, "h1": 1, "h2": 1, "h3": 2, "bh": 0, "total_h": 4}, {"period": "2026066", "z1p": [10, 1, 4, 7], "z2p": [22, 21, 19, 15], "z3p": [33, 29, 31, 28], "bp": [2, 15, 7, 11], "z1a": [5, 11], "z2a": [21], "z3a": [23, 24, 29], "ba": 16, "h1": 0, "h2": 1, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026065", "z1p": [4, 2, 7, 1], "z2p": [14, 22, 15, 16], "z3p": [28, 29, 30, 25], "bp": [2, 15, 7, 11], "z1a": [7, 8], "z2a": [16], "z3a": [24, 30, 32], "ba": 2, "h1": 1, "h2": 1, "h3": 1, "bh": 1, "total_h": 3}, {"period": "2026064", "z1p": [10, 7, 1, 8], "z2p": [22, 13, 16, 20], "z3p": [30, 33, 25, 29], "bp": [2, 7, 11, 1], "z1a": [1, 9], "z2a": [15, 18], "z3a": [29, 33], "ba": 15, "h1": 1, "h2": 0, "h3": 2, "bh": 0, "total_h": 3}, {"period": "2026063", "z1p": [1, 7, 4, 8], "z2p": [16, 22, 13, 20], "z3p": [29, 30, 33, 28], "bp": [7, 2, 11, 1], "z1a": [2, 8], "z2a": [], "z3a": [25, 28, 30, 31], "ba": 2, "h1": 1, "h2": 0, "h3": 2, "bh": 1, "total_h": 3}, {"period": "2026062", "z1p": [9, 7, 8, 1], "z2p": [16, 22, 21, 14], "z3p": [30, 29, 28, 27], "bp": [7, 2, 11, 1], "z1a": [2, 4, 7], "z2a": [14], "z3a": [28, 29], "ba": 9, "h1": 1, "h2": 1, "h3": 2, "bh": 0, "total_h": 4}, {"period": "2026061", "z1p": [1, 3, 9, 7], "z2p": [16, 14, 22, 15], "z3p": [30, 29, 26, 28], "bp": [2, 11, 1, 15], "z1a": [1, 4, 5], "z2a": [15], "z3a": [23, 28], "ba": 7, "h1": 1, "h2": 1, "h3": 1, "bh": 0, "total_h": 3}, {"period": "2026060", "z1p": [1, 3, 11, 8], "z2p": [13, 14, 15, 20], "z3p": [33, 29, 30, 26], "bp": [2, 1, 15, 7], "z1a": [7, 9, 10], "z2a": [16, 22], "z3a": [27], "ba": 11, "h1": 0, "h2": 0, "h3": 0, "bh": 0, "total_h": 0}, {"period": "2026059", "z1p": [9, 1, 11, 4], "z2p": [15, 18, 22, 21], "z3p": [33, 24, 28, 30], "bp": [2, 1, 7, 5], "z1a": [8], "z2a": [16], "z3a": [26, 28, 29, 30], "ba": 15, "h1": 0, "h2": 0, "h3": 2, "bh": 0, "total_h": 2}, {"period": "2026058", "z1p": [3, 1, 9, 2], "z2p": [14, 15, 13, 16], "z3p": [30, 24, 33, 28], "bp": [2, 7, 5, 13], "z1a": [1, 4, 7], "z2a": [21], "z3a": [29, 30], "ba": 1, "h1": 1, "h2": 0, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026057", "z1p": [7, 3, 4, 1], "z2p": [21, 15, 16, 14], "z3p": [24, 30, 27, 28], "bp": [2, 5, 13, 10], "z1a": [1, 10], "z2a": [22], "z3a": [24, 28, 30], "ba": 7, "h1": 1, "h2": 0, "h3": 3, "bh": 0, "total_h": 4}, {"period": "2026056", "z1p": [2, 9, 4, 10], "z2p": [14, 18, 17, 22], "z3p": [30, 24, 33, 31], "bp": [2, 13, 10, 1], "z1a": [10], "z2a": [19, 21, 22], "z3a": [31, 33], "ba": 5, "h1": 1, "h2": 1, "h3": 2, "bh": 0, "total_h": 4}, {"period": "2026055", "z1p": [9, 3, 11, 1], "z2p": [22, 14, 20, 15], "z3p": [30, 25, 29, 33], "bp": [2, 10, 1, 11], "z1a": [4, 11], "z2a": [], "z3a": [24, 25, 32, 33], "ba": 13, "h1": 1, "h2": 0, "h3": 2, "bh": 0, "total_h": 3}, {"period": "2026054", "z1p": [2, 8, 7, 3], "z2p": [14, 13, 12, 19], "z3p": [24, 30, 31, 25], "bp": [2, 10, 1, 11], "z1a": [], "z2a": [13, 20], "z3a": [25, 29, 30, 33], "ba": 2, "h1": 0, "h2": 1, "h3": 2, "bh": 1, "total_h": 3}, {"period": "2026053", "z1p": [2, 9, 10, 6], "z2p": [17, 16, 19, 14], "z3p": [24, 30, 25, 27], "bp": [10, 1, 2, 11], "z1a": [1, 2, 3, 8], "z2a": [13, 14], "z3a": [], "ba": 2, "h1": 1, "h2": 1, "h3": 0, "bh": 1, "total_h": 2}, {"period": "2026052", "z1p": [9, 2, 4, 3], "z2p": [18, 14, 15, 17], "z3p": [30, 24, 33, 28], "bp": [10, 1, 2, 16], "z1a": [1, 3, 11], "z2a": [22], "z3a": [26, 31], "ba": 11, "h1": 1, "h2": 0, "h3": 0, "bh": 0, "total_h": 1}, {"period": "2026051", "z1p": [4, 2, 3, 9], "z2p": [18, 14, 17, 15], "z3p": [30, 33, 24, 28], "bp": [1, 2, 16, 3], "z1a": [9], "z2a": [14, 15, 16], "z3a": [29, 30], "ba": 10, "h1": 1, "h2": 2, "h3": 1, "bh": 0, "total_h": 4}, {"period": "2026050", "z1p": [2, 10, 4, 8], "z2p": [17, 19, 14, 15], "z3p": [24, 33, 30, 31], "bp": [1, 2, 16, 7], "z1a": [6, 9], "z2a": [], "z3a": [25, 27, 28, 30], "ba": 3, "h1": 0, "h2": 0, "h3": 1, "bh": 0, "total_h": 1}, {"period": "2026049", "z1p": [2, 11, 7, 9], "z2p": [22, 17, 16, 14], "z3p": [33, 27, 31, 24], "bp": [1, 16, 7, 5], "z1a": [3, 4], "z2a": [14, 15, 18, 20], "z3a": [], "ba": 2, "h1": 0, "h2": 1, "h3": 0, "bh": 0, "total_h": 1}, {"period": "2026048", "z1p": [2, 9, 4, 6], "z2p": [14, 22, 17, 18], "z3p": [25, 33, 23, 30], "bp": [16, 7, 5, 15], "z1a": [9], "z2a": [15, 18], "z3a": [24, 28, 33], "ba": 1, "h1": 1, "h2": 1, "h3": 1, "bh": 0, "total_h": 3}, {"period": "2026047", "z1p": [2, 6, 9, 10], "z2p": [14, 22, 17, 19], "z3p": [25, 31, 27, 24], "bp": [16, 5, 15, 4], "z1a": [7], "z2a": [16, 21], "z3a": [24, 27, 30], "ba": 7, "h1": 0, "h2": 0, "h3": 2, "bh": 0, "total_h": 2}, {"period": "2026046", "z1p": [2, 11, 4, 10], "z2p": [22, 19, 17, 14], "z3p": [24, 27, 23, 33], "bp": [5, 15, 4, 1], "z1a": [2, 9, 10], "z2a": [], "z3a": [24, 31, 33], "ba": 16, "h1": 2, "h2": 0, "h3": 2, "bh": 0, "total_h": 4}, {"period": "2026045", "z1p": [3, 2, 4, 6], "z2p": [22, 14, 17, 19], "z3p": [23, 33, 24, 25], "bp": [5, 4, 1, 10], "z1a": [4, 11], "z2a": [15, 17], "z3a": [24, 30], "ba": 15, "h1": 1, "h2": 1, "h3": 1, "bh": 0, "total_h": 3}, {"period": "2026044", "z1p": [10, 6, 8, 2], "z2p": [22, 12, 15, 17], "z3p": [28, 24, 23, 33], "bp": [5, 4, 10, 13], "z1a": [2], "z2a": [14, 17, 18, 22], "z3a": [30], "ba": 1, "h1": 1, "h2": 2, "h3": 0, "bh": 0, "total_h": 3}, {"period": "2026043", "z1p": [6, 2, 10, 3], "z2p": [12, 13, 18, 22], "z3p": [31, 24, 25, 33], "bp": [5, 4, 10, 13], "z1a": [6, 9], "z2a": [14, 16], "z3a": [25, 32], "ba": 16, "h1": 1, "h2": 0, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026042", "z1p": [3, 10, 4, 11], "z2p": [22, 14, 12, 18], "z3p": [33, 23, 28, 31], "bp": [5, 4, 13, 2], "z1a": [2, 7], "z2a": [12, 19], "z3a": [24, 31], "ba": 10, "h1": 0, "h2": 1, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026041", "z1p": [3, 10, 1, 6], "z2p": [13, 18, 12, 21], "z3p": [25, 33, 24, 23], "bp": [5, 4, 2, 8], "z1a": [2, 8, 10], "z2a": [17, 19], "z3a": [24], "ba": 13, "h1": 1, "h2": 0, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026040", "z1p": [6, 3, 1, 2], "z2p": [22, 13, 17, 19], "z3p": [28, 23, 31, 25], "bp": [5, 2, 8, 6], "z1a": [3, 4], "z2a": [14, 22], "z3a": [23, 33], "ba": 4, "h1": 1, "h2": 1, "h3": 1, "bh": 0, "total_h": 3}, {"period": "2026039", "z1p": [6, 2, 1, 10], "z2p": [13, 22, 12, 17], "z3p": [25, 28, 23, 24], "bp": [2, 5, 8, 6], "z1a": [8], "z2a": [17, 18, 21], "z3a": [25, 30], "ba": 5, "h1": 0, "h2": 1, "h3": 1, "bh": 1, "total_h": 2}, {"period": "2026038", "z1p": [3, 6, 11, 10], "z2p": [13, 18, 21, 22], "z3p": [29, 28, 24, 25], "bp": [2, 8, 6, 4], "z1a": [1, 2], "z2a": [13], "z3a": [23, 25, 27], "ba": 5, "h1": 0, "h2": 1, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026037", "z1p": [3, 11, 10, 1], "z2p": [22, 18, 13, 19], "z3p": [33, 31, 25, 23], "bp": [2, 8, 6, 4], "z1a": [11], "z2a": [22], "z3a": [27, 29, 31, 33], "ba": 12, "h1": 1, "h2": 1, "h3": 2, "bh": 0, "total_h": 4}, {"period": "2026036", "z1p": [3, 1, 11, 9], "z2p": [22, 18, 13, 19], "z3p": [31, 28, 23, 33], "bp": [2, 6, 4, 7], "z1a": [6, 10], "z2a": [12, 15, 22], "z3a": [28], "ba": 8, "h1": 0, "h2": 1, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026035", "z1p": [2, 3, 1, 10], "z2p": [13, 21, 18, 22], "z3p": [29, 23, 24, 25], "bp": [6, 4, 7, 2], "z1a": [2, 6], "z2a": [12], "z3a": [24, 25, 32], "ba": 2, "h1": 1, "h2": 0, "h3": 2, "bh": 1, "total_h": 3}, {"period": "2026034", "z1p": [2, 3, 1, 11], "z2p": [15, 22, 19, 20], "z3p": [23, 24, 28, 31], "bp": [6, 4, 2, 8], "z1a": [1, 3, 7], "z2a": [13, 22], "z3a": [23], "ba": 7, "h1": 2, "h2": 1, "h3": 1, "bh": 0, "total_h": 4}, {"period": "2026033", "z1p": [3, 1, 11, 10], "z2p": [18, 13, 15, 12], "z3p": [31, 23, 25, 33], "bp": [4, 2, 8, 5], "z1a": [3, 6], "z2a": [13, 21], "z3a": [28, 29], "ba": 6, "h1": 1, "h2": 1, "h3": 0, "bh": 0, "total_h": 2}, {"period": "2026032", "z1p": [2, 1, 3, 9], "z2p": [13, 21, 18, 15], "z3p": [23, 25, 29, 28], "bp": [4, 8, 5, 15], "z1a": [1, 3, 11], "z2a": [18], "z3a": [31, 33], "ba": 2, "h1": 2, "h2": 1, "h3": 0, "bh": 0, "total_h": 3}, {"period": "2026031", "z1p": [2, 10, 11, 3], "z2p": [13, 16, 17, 18], "z3p": [30, 25, 26, 24], "bp": [4, 5, 15, 13], "z1a": [3, 10], "z2a": [12, 13, 18], "z3a": [33], "ba": 8, "h1": 2, "h2": 2, "h3": 0, "bh": 0, "total_h": 4}, {"period": "2026030", "z1p": [2, 8, 1, 3], "z2p": [22, 18, 19, 15], "z3p": [23, 28, 25, 31], "bp": [5, 15, 4, 13], "z1a": [10, 11], "z2a": [14, 19, 22], "z3a": [24], "ba": 4, "h1": 0, "h2": 2, "h3": 0, "bh": 1, "total_h": 2}, {"period": "2026029", "z1p": [2, 8, 1, 3], "z2p": [18, 17, 13, 16], "z3p": [25, 23, 26, 29], "bp": [15, 4, 13, 3], "z1a": [6], "z2a": [19, 22], "z3a": [23, 28, 31], "ba": 5, "h1": 0, "h2": 0, "h3": 1, "bh": 0, "total_h": 1}, {"period": "2026028", "z1p": [3, 1, 8, 7], "z2p": [18, 15, 13, 17], "z3p": [23, 25, 30, 24], "bp": [4, 13, 3, 10], "z1a": [2, 6, 9], "z2a": [17], "z3a": [25, 28], "ba": 15, "h1": 0, "h2": 1, "h3": 1, "bh": 0, "total_h": 2}, {"period": "2026027", "z1p": [1, 8, 7, 3], "z2p": [16, 17, 18, 15], "z3p": [30, 23, 24, 25], "bp": [4, 3, 10, 14], "z1a": [2], "z2a": [13, 17, 18], "z3a": [25, 26], "ba": 13, "h1": 0, "h2": 2, "h3": 1, "bh": 0, "total_h": 3}]};
+
+// ==================== RENDER ====================
+const stats = DATA.stats;
+document.getElementById('stat-rate').textContent = stats.rate + '%';
+document.getElementById('stat-total').textContent = stats.red_hits + '/' + (stats.tests * 6);
+document.getElementById('stat-blue').textContent = stats.blue_hits + '/' + stats.tests;
+
+let maxHit = 0;
+DATA.rows.forEach(r => { if (r.total_h > maxHit) maxHit = r.total_h; });
+document.getElementById('stat-best').textContent = maxHit + '/6';
+
+const container = document.getElementById('container');
+let overallIdx = 0;
+
+DATA.rows.forEach(row => {
+  overallIdx++;
+  
+  // Determine hit class
+  let hitClass = 'low';
+  if (row.total_h >= 4) hitClass = 'high';
+  else if (row.total_h >= 2) hitClass = 'mid';
+  
+  let statClass = 'bad';
+  if (row.total_h >= 4) statClass = 'good';
+  else if (row.total_h >= 2) statClass = 'ok';
+  
+  // Period header
+  const header = document.createElement('div');
+  header.className = 'period-header';
+  header.innerHTML = `
+    <span class="period-num">${row.period}</span>
+    <span class="period-stat ${statClass}">红球 ${row.total_h}/6</span>
+    <span class="period-stat" style="color:#5e9eff">${row.bh ? '蓝球 ✓' : '蓝球 ✗'}</span>
+    <span class="period-rank">#${overallIdx}/42</span>
+  `;
+  container.appendChild(header);
+  
+  // Prediction row
+  const predRow = document.createElement('div');
+  predRow.className = 'row pred';
+  
+  // Z1
+  const z1Balls = document.createElement('div');
+  z1Balls.className = 'balls';
+  row.z1p.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z1a.includes(n) ? 'hit' : 'miss');
+    b.textContent = String(n).padStart(2, '0');
+    z1Balls.appendChild(b);
+  });
+  
+  // Z2
+  const z2Balls = document.createElement('div');
+  z2Balls.className = 'balls';
+  row.z2p.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z2a.includes(n) ? 'hit' : 'miss');
+    b.textContent = String(n).padStart(2, '0');
+    z2Balls.appendChild(b);
+  });
+  
+  // Z3
+  const z3Balls = document.createElement('div');
+  z3Balls.className = 'balls';
+  row.z3p.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z3a.includes(n) ? 'hit' : 'miss');
+    b.textContent = String(n).padStart(2, '0');
+    z3Balls.appendChild(b);
+  });
+  
+  // Blue prediction
+  const bBalls = document.createElement('div');
+  bBalls.className = 'balls';
+  row.bp.forEach(n => {
+    const b = document.createElement('span');
+    let cls = 'ball';
+    if (n === row.ba) cls += ' blue-hit';
+    else cls += ' miss';
+    b.className = cls;
+    b.textContent = String(n).padStart(2, '0');
+    bBalls.appendChild(b);
+  });
+  
+  // Hit count
+  const hitDiv = document.createElement('div');
+  hitDiv.className = 'hit-count ' + hitClass;
+  hitDiv.textContent = row.total_h + '/6';
+  
+  predRow.innerHTML = '<span class="row-label">预 测</span>';
+  predRow.appendChild(z1Balls);
+  predRow.appendChild(z2Balls);
+  predRow.appendChild(z3Balls);
+  predRow.appendChild(bBalls);
+  predRow.appendChild(hitDiv);
+  container.appendChild(predRow);
+  
+  // Actual row
+  const actRow = document.createElement('div');
+  actRow.className = 'row actual';
+  
+  // Z1 actual
+  const z1aBalls = document.createElement('div');
+  z1aBalls.className = 'balls';
+  row.z1a.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z1p.includes(n) ? 'hit' : '');
+    b.textContent = String(n).padStart(2, '0');
+    z1aBalls.appendChild(b);
+  });
+  if (row.z1a.length === 0) {
+    const empty = document.createElement('span');
+    empty.style.cssText = 'color:#444;font-size:12px;';
+    empty.textContent = '无';
+    z1aBalls.appendChild(empty);
+  }
+  
+  // Z2 actual
+  const z2aBalls = document.createElement('div');
+  z2aBalls.className = 'balls';
+  row.z2a.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z2p.includes(n) ? 'hit' : '');
+    b.textContent = String(n).padStart(2, '0');
+    z2aBalls.appendChild(b);
+  });
+  if (row.z2a.length === 0) {
+    const empty = document.createElement('span');
+    empty.style.cssText = 'color:#444;font-size:12px;';
+    empty.textContent = '无';
+    z2aBalls.appendChild(empty);
+  }
+  
+  // Z3 actual
+  const z3aBalls = document.createElement('div');
+  z3aBalls.className = 'balls';
+  row.z3a.forEach(n => {
+    const b = document.createElement('span');
+    b.className = 'ball ' + (row.z3p.includes(n) ? 'hit' : '');
+    b.textContent = String(n).padStart(2, '0');
+    z3aBalls.appendChild(b);
+  });
+  if (row.z3a.length === 0) {
+    const empty = document.createElement('span');
+    empty.style.cssText = 'color:#444;font-size:12px;';
+    empty.textContent = '无';
+    z3aBalls.appendChild(empty);
+  }
+  
+  // Blue actual
+  const baBalls = document.createElement('div');
+  baBalls.className = 'balls';
+  const baBall = document.createElement('span');
+  baBall.className = 'ball ' + (row.bp.includes(row.ba) ? 'blue-hit' : 'actual-blue');
+  baBall.textContent = String(row.ba).padStart(2, '0');
+  baBalls.appendChild(baBall);
+  
+  actRow.innerHTML = '<span class="row-label">实 际</span>';
+  actRow.appendChild(z1aBalls);
+  actRow.appendChild(z2aBalls);
+  actRow.appendChild(z3aBalls);
+  actRow.appendChild(baBalls);
+  actRow.appendChild(document.createElement('div')); // empty for hit count column
+  container.appendChild(actRow);
+});
+
+// Scroll to top button
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTop').classList.toggle('show', window.scrollY > 400);
+});
+</script>
+
+</body>
+</html>

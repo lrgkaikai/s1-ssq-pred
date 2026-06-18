@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated files
+s1_results.html
+deploy/
+*.xlsx
+*.html.bak
+s1_detail_table.html
+
+# Test scripts
+test_*.py
+tune_*.py
+gen_table_html.py
+
+# Project data
+.workbuddy/
+*.json
+!package.json
+
+# OS
+.DS_Store
+Thumbs.db
