@@ -155,7 +155,7 @@ DATA.rows.forEach(row => {
   overallIdx++;
   
   const isPending = row.pending === true;
-  const totalRows = DATA.stats.tests + (rows.some(r => r.pending) ? 1 : 0);
+  const totalRows = DATA.stats.tests + (DATA.rows.some(r => r.pending) ? 1 : 0);
   
   // Period header
   const header = document.createElement('div');
