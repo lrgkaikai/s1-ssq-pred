@@ -1,25 +1,22 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
+# ====== 源代码保护 — 不推送到GitHub ======
+*.py
+s1_template.html
 
-# Generated files
+# ====== 生成文件 ======
 s1_results.html
 deploy/
 *.xlsx
 *.html.bak
 s1_detail_table.html
 
-# Test scripts
-test_*.py
-tune_*.py
-gen_table_html.py
-
-# Project data
+# ====== 项目数据 ======
 .workbuddy/
 *.json
 !package.json
 
-# OS
+# ====== 系统 ======
+__pycache__/
+*.pyc
+*.pyo
 .DS_Store
 Thumbs.db
